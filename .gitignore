@@ -206,3 +206,6 @@ nle/version.py
 nle_data/
 nle/fbs/
 nle/nethackdir
+
+# cibuildwheel
+wheelhouse/

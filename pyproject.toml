@@ -43,3 +43,23 @@ select = [
 allow-dict-calls-with-keyword-arguments = true
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401"]  # unused-import.
+
+[tool.cibuildwheel]
+# We need to build for the following Python versions:
+build = "cp{38,39,310,311,312}-*"
+
+[tool.cibuildwheel.linux]
+# Only manylinux is supported (no musl)
+build = "cp{38,39,310,311,312}-manylinux*"
+
+# For manylinux2014 (CentOS 7-based) or manylinux_2_28 (Alma 8-based) 
+# we need to install the following dependencies using yum:
+before-all = "yum install -y autoconf bison cmake flex git libtool bzip2-devel"
+
+# Only build for x86_64 and aarch64 are officially supported
+archs = "x86_64 aarch64"
+manylinux-x86_64-image = "manylinux2014"
+manylinux-aarch64-image = "manylinux2014"
+
+[tool.cibuildwheel.macos]
+before-all = "brew install cmake"
