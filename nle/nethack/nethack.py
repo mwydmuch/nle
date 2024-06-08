@@ -106,7 +106,7 @@ def _new_dl_linux(vardir):
 def _new_dl(vardir):
     """Creates a copied .so file to allow for multiple independent NLE instances"""
 
-    # Linux has memfd_create or O_TMPFILE, 
+    # Linux has memfd_create or O_TMPFILE,
     # but both methods are not compatible with fixing rpath with patchelf.
     if sys.platform == "linux" and not os.path.exists(PACKAGE_LIBS_DIR):
         return _new_dl_linux(vardir)

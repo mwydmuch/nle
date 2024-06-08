@@ -54,7 +54,7 @@ build = "cp{38,39,310,311,312}-manylinux*"
 
 # For manylinux2014 (CentOS 7-based) or manylinux_2_28 (Alma 8-based) 
 # we need to install the following dependencies using yum:
-before-all = "yum install -y autoconf bison cmake flex git libtool bzip2-devel"
+before-all = "rm -rf {project}/build && rm -f CMakeCache.txt && yum install -y autoconf bison cmake flex git libtool bzip2-devel ninja-build"
 
 # Only build for x86_64 and aarch64 are officially supported
 archs = "x86_64 aarch64"

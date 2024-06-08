@@ -117,9 +117,8 @@ set_target_properties(nethack PROPERTIES CXX_STANDARD 14 SUFFIX ".so")
 target_include_directories(
   nethack
   PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include ${NLE_INC_GEN} /usr/local/include
-         ${CMAKE_CURRENT_SOURCE_DIR}/third_party/libtmt
-         ${BZIP2_INCLUDE_DIRS})
-#target_link_directories(nethack PUBLIC /usr/local/lib)
+         ${CMAKE_CURRENT_SOURCE_DIR}/third_party/libtmt ${BZIP2_INCLUDE_DIRS})
+# target_link_directories(nethack PUBLIC /usr/local/lib)
 
 # Careful with -DMONITOR_HEAP: Ironically, it fails to fclose FILE* heaplog.
 # target_compile_definitions(nethack PUBLIC "$<$<CONFIG:DEBUG>:MONITOR_HEAP>")
@@ -158,9 +157,10 @@ add_library(
   converter STATIC ${CMAKE_CURRENT_SOURCE_DIR}/third_party/converter/converter.c
                    ${CMAKE_CURRENT_SOURCE_DIR}/third_party/converter/stripgfx.c)
 target_include_directories(
-  converter PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/third_party/libtmt
-                   ${CMAKE_CURRENT_SOURCE_DIR}/third_party/converter
-                   ${BZIP2_INCLUDE_DIRS})
+  converter
+  PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/third_party/libtmt
+         ${CMAKE_CURRENT_SOURCE_DIR}/third_party/converter
+         ${BZIP2_INCLUDE_DIRS})
 target_link_libraries(converter PUBLIC ${BZIP2_LIBRARIES} tmt)
 if(CMAKE_BUILD_TYPE MATCHES Debug)
   target_compile_options(converter PRIVATE -Wall -Wextra -pedantic -Werror)
