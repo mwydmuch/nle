@@ -194,7 +194,6 @@ class Nethack:
         # Create a HACKDIR for us.
         self._tempdir = tempfile.TemporaryDirectory(prefix="nle")
         self._vardir = self._tempdir.name
-        print("Using temporary directory %s" % self._vardir)
 
         # Symlink a nhdat.
         os.symlink(os.path.join(hackdir, "nhdat"), os.path.join(self._vardir, "nhdat"))
