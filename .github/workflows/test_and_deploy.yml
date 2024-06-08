@@ -110,14 +110,11 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@v3
         with:
-          name: python-package-distributions
+          name: python-sdist
           path: dist/
   build_wheels:
-    name: Build wheels on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-20.04, macos-latest]
+    name: Build wheels on Ubuntu
+    runs-on: ubuntu-20.04 # Can be also run for MacOS
     steps:
       - uses: actions/checkout@v3
         with:
@@ -128,17 +125,23 @@ jobs:
         with:
           platforms: all
       - name: Build wheels
+        if: github.event_name != 'release' && github.event.action != 'released'
         uses: pypa/cibuildwheel@v2.15.0
         env:
-          # Set NLE_RELEASE_BUILD to 1 to build release wheels
-          CIBW_ENVIRONMENT: "NLE_RELEASE_BUILD=1"
           # Increase verbosity to see what's going on in the build in case of failure
           CIBW_BUILD_VERBOSITY: 3
           CIBW_REPAIR_WHEEL_COMMAND_LINUX: >
             auditwheel show {wheel} && auditwheel repair -w {dest_dir} {wheel}
-      - name: Upload artifacts
+      - name: Build release wheels
+        if: github.event_name == 'release' && github.event.action == 'released'
+        uses: pypa/cibuildwheel@v2.15.0
+        env:
+          # Set NLE_RELEASE_BUILD to 1 to build release wheels
+          CIBW_ENVIRONMENT: "NLE_RELEASE_BUILD=1"
+      - name: Save wheels
         uses: actions/upload-artifact@v3
         with:
+          name: python-wheels
           path: ./wheelhouse/*.whl
   test_manylinux_3_11:
     name: Test manylinux wheel on Ubuntu w/ Py3.11
@@ -154,7 +157,7 @@ jobs:
       - name: Get dist artifacts from test_sdist
         uses: actions/download-artifact@v3
         with:
-          name: python-package-distributions
+          name: python-wheels
           path: dist
       - name: Install from sdist
         run: |
@@ -187,10 +190,15 @@ jobs:
           echo "v$(cat version.txt)"
           echo "${{ github.event.release.tag_name }}"
           [[ "${{ github.event.release.tag_name }}" == "v$(cat version.txt)" ]]
-      - name: Get dist artifacts from test_sdist
+      - name: Get sdist artifact
         uses: actions/download-artifact@v3
         with:
-          name: python-package-distributions
+          name: python-sdist
+          path: dist
+      - name: Get wheels artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: python-wheels
           path: dist
       - name: Install from sdist
         run: |
