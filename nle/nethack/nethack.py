@@ -13,6 +13,9 @@ from nle import _pynethack
 
 DLPATH = os.path.join(os.path.dirname(_pynethack.__file__), "libnethack.so")
 
+# site-packages/nle.libs directory is where the wheel's additional .so / .dylib files are installed
+PACKAGE_LIBS_DIR = os.path.join(os.path.dirname(_pynethack.__file__), "../nle.libs")
+
 DUNGEON_SHAPE = (_pynethack.nethack.ROWNO, _pynethack.nethack.COLNO - 1)
 BLSTATS_SHAPE = (_pynethack.nethack.NLE_BLSTATS_SIZE,)
 MESSAGE_SHAPE = (_pynethack.nethack.NLE_MESSAGE_SIZE,)
@@ -76,6 +79,11 @@ except AttributeError:  # No files() function in Python 3.8.
 TTYREC_VERSION = 3
 
 
+def _patch_dl_rpath(dlpath):
+    if os.path.exists(PACKAGE_LIBS_DIR):
+        os.system("patchelf --set-rpath '%s' %s" % (PACKAGE_LIBS_DIR, dlpath))
+
+
 def _new_dl_linux(vardir):
     if hasattr(os, "memfd_create"):
         target = os.memfd_create("nle.so")
@@ -91,12 +99,16 @@ def _new_dl_linux(vardir):
     dl = tempfile.TemporaryFile(suffix="libnethack.so", dir=vardir)
     path = "/proc/self/fd/%i" % dl.fileno()
     shutil.copyfile(DLPATH, path)  # Should use sendfile.
+
     return dl, path
 
 
 def _new_dl(vardir):
     """Creates a copied .so file to allow for multiple independent NLE instances"""
-    if sys.platform == "linux":
+
+    # Linux has memfd_create or O_TMPFILE, 
+    # but both methods are not compatible with fixing rpath with patchelf.
+    if sys.platform == "linux" and not os.path.exists(PACKAGE_LIBS_DIR):
         return _new_dl_linux(vardir)
 
     # MacOS has no memfd_create or O_TMPFILE. Using /dev/fd/{FD} as an argument
@@ -104,6 +116,7 @@ def _new_dl(vardir):
     # instead and hope vardir gets properly deleted at some point.
     dl = tempfile.NamedTemporaryFile(suffix="libnethack.so", dir=vardir)
     shutil.copyfile(DLPATH, dl.name)  # Might use fcopyfile.
+    _patch_dl_rpath(dl.name)
     return dl, dl.name
 
 
@@ -181,6 +194,7 @@ class Nethack:
         # Create a HACKDIR for us.
         self._tempdir = tempfile.TemporaryDirectory(prefix="nle")
         self._vardir = self._tempdir.name
+        print("Using temporary directory %s" % self._vardir)
 
         # Symlink a nhdat.
         os.symlink(os.path.join(hackdir, "nhdat"), os.path.join(self._vardir, "nhdat"))
