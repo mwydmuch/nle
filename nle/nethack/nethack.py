@@ -109,7 +109,7 @@ def _new_dl(vardir):
 
     # Linux has memfd_create or O_TMPFILE,
     # but both methods are not compatible with fixing rpath with patchelf.
-    if sys.platform == "linux": #and not os.path.exists(PACKAGE_LIBS_DIR):
+    if sys.platform == "linux":
         return _new_dl_linux(vardir)
 
     # MacOS has no memfd_create or O_TMPFILE. Using /dev/fd/{FD} as an argument
