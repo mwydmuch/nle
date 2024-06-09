@@ -154,16 +154,16 @@ jobs:
           python-version: 3.11
       - name: Ensure latest pip & wheel
         run: python -m pip install -q --upgrade pip wheel
-      - name: Get dist artifacts from test_sdist
+      - name: Get wheels artifacts
         uses: actions/download-artifact@v3
         with:
           name: python-wheels
           path: dist
-      - name: Install from sdist
+      - name: Install from wheel
         run: |
-          SDISTNAME=$(ls dist/*311*manylinux*)
+          WHEELNAME=$(ls dist/*311*manylinux*x86_64*.whl)
           MODE="[all]"
-          pip install "dist/$SDISTNAME$MODE"
+          pip install "$WHEELNAME$MODE"
       - name: Run tests outside repo dir
         run: |
           REPONAME=$(basename $PWD)
@@ -200,14 +200,14 @@ jobs:
         with:
           name: python-wheels
           path: dist
-      - name: Install from sdist
+      - name: Report dist contents
         run: |
           pwd
           ls -R
           ls -al .
           ls -R dist/
           ls -al dist/
-    # NOTE: we assume that dist/ contains a built sdist (and only that).
+    # NOTE: we assume that dist/ contains a built sdist and wheels (and only that).
     #       Yes, we could be more defensively, but What Could Go Wrong?™
       - name: Publish package to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
