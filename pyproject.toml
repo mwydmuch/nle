@@ -45,24 +45,24 @@ allow-dict-calls-with-keyword-arguments = true
 "__init__.py" = ["F401"]  # unused-import.
 
 [tool.cibuildwheel]
-# We need to build for the following Python versions:
+# We need to build wheels for the following Python versions:
 build = "cp{38,39,310,311}-*"
 
 [tool.cibuildwheel.linux]
 # Only manylinux is supported (no musllinux)
 build = "cp{38,39,310,311}-manylinux*"
 
-# We need to clean up the build directory and CMakeCache.txt
+# We need to clean up the build directory, all .so files, and CMakeCache.txt
 # and install the dependencies using yum, as manylinux2014 image is CentOS 7-based
 before-all = "rm -rf {project}/build {project}/*.so {project}/CMakeCache.txt && yum install -y autoconf bison cmake flex git libtool bzip2-devel"
 
-# Only x86_64 and aarch64 (ARM) is supported
+# Only x86_64 and aarch64 (ARM) architectures are supported
 archs = "x86_64 aarch64"
 
-# Set the manylinux image to use for building
+# Use manylinux2014 image for both x86_64 and aarch64
 manylinux-x86_64-image = "manylinux2014"
 manylinux-aarch64-image = "manylinux2014"
 
 [tool.cibuildwheel.macos]
-# For macOS wheels, we only need cmake
-before-all = "rm -rf {project}/build {project}/*.so {project}/MakeCache.txt && rm -f CMakeCache.txt && brew install cmake"
+# For macOS wheels, we only need to install cmake
+before-all = "rm -rf {project}/build {project}/*.so {project}/CMakeCache.txt && brew install cmake"
