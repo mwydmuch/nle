@@ -87,9 +87,10 @@ def _patch_dl_rpath(dlpath):
 def _new_dl_linux(vardir):
     if hasattr(os, "memfd_create"):
         target = os.memfd_create("nle.so")
-        path = "/proc/self/fd/%i" % target
+        path = "/proc/%s/fd/%i" % (os.getpid(), target)
         try:
             shutil.copyfile(DLPATH, path)  # Should use sendfile.
+            _patch_dl_rpath(path)
         except IOError:
             os.close(target)
             raise
@@ -97,9 +98,9 @@ def _new_dl_linux(vardir):
 
     # Otherwise, no memfd_create. Try with O_TMPFILE via the tempfile module.
     dl = tempfile.TemporaryFile(suffix="libnethack.so", dir=vardir)
-    path = "/proc/self/fd/%i" % dl.fileno()
+    path = "/proc/%s/fd/%i" % (os.getpid(), dl.fileno())
     shutil.copyfile(DLPATH, path)  # Should use sendfile.
-
+    _patch_dl_rpath(path)
     return dl, path
 
 
@@ -108,7 +109,7 @@ def _new_dl(vardir):
 
     # Linux has memfd_create or O_TMPFILE,
     # but both methods are not compatible with fixing rpath with patchelf.
-    if sys.platform == "linux" and not os.path.exists(PACKAGE_LIBS_DIR):
+    if sys.platform == "linux": #and not os.path.exists(PACKAGE_LIBS_DIR):
         return _new_dl_linux(vardir)
 
     # MacOS has no memfd_create or O_TMPFILE. Using /dev/fd/{FD} as an argument
@@ -116,7 +117,6 @@ def _new_dl(vardir):
     # instead and hope vardir gets properly deleted at some point.
     dl = tempfile.NamedTemporaryFile(suffix="libnethack.so", dir=vardir)
     shutil.copyfile(DLPATH, dl.name)  # Might use fcopyfile.
-    _patch_dl_rpath(dl.name)
     return dl, dl.name
 
 
