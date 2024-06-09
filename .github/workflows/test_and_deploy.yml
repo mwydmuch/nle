@@ -12,7 +12,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        python-version: ['3.8', '3.9', '3.10', '3.11']
+        python-version: ['3.8', '3.9', '3.10', '3.11', '3.12']
         os: [ubuntu-20.04, macos-latest]
       fail-fast: false
     steps:
@@ -114,19 +114,19 @@ jobs:
           path: dist/
   build_wheels:
     name: Build wheels on Ubuntu
-    runs-on: ubuntu-20.04 # Can be also run for MacOS
+    runs-on: ubuntu-20.04 # Can be also run for macOS
     steps:
       - uses: actions/checkout@v3
         with:
           submodules: recursive
-      - name: Set up QEMU
+      - name: Set up QEMU # Required for building manylinux aarch64 wheels on x86_64
         if: runner.os == 'Linux'
         uses: docker/setup-qemu-action@v2
         with:
           platforms: all
       - name: Build wheels
         if: github.event_name != 'release' && github.event.action != 'released'
-        uses: pypa/cibuildwheel@v2.15.0
+        uses: pypa/cibuildwheel@v2.15.0 # The main configuration is in pyproject.toml
         env:
           # Increase verbosity to see what's going on in the build in case of failure
           CIBW_BUILD_VERBOSITY: 3
@@ -134,7 +134,7 @@ jobs:
             auditwheel show {wheel} && auditwheel repair -w {dest_dir} {wheel}
       - name: Build release wheels
         if: github.event_name == 'release' && github.event.action == 'released'
-        uses: pypa/cibuildwheel@v2.15.0
+        uses: pypa/cibuildwheel@v2.15.0 # The main configuration is in pyproject.toml
         env:
           # Set NLE_RELEASE_BUILD to 1 to build release wheels
           CIBW_ENVIRONMENT: "NLE_RELEASE_BUILD=1"
@@ -162,9 +162,9 @@ jobs:
         with:
           name: python-wheels
           path: dist
-      - name: Install from wheel
-        run: |
-          WHEELNAME=$(ls dist/*311*manylinux*x86_64*.whl)
+      - name: Install from wheel # Install wheel mathcing the Python version and architecture
+        run: | 
+          WHEELNAME=$(ls dist/*311*manylinux*x86_64*.whl) 
           MODE="[all]"
           pip install "$WHEELNAME$MODE"
       - name: Run tests outside repo dir
@@ -193,12 +193,12 @@ jobs:
           echo "v$(cat version.txt)"
           echo "${{ github.event.release.tag_name }}"
           [[ "${{ github.event.release.tag_name }}" == "v$(cat version.txt)" ]]
-      - name: Get sdist artifact
+      - name: Get sdist artifact # Get sdist artifact from the test_sdist job
         uses: actions/download-artifact@v3
         with:
           name: python-sdist
           path: dist
-      - name: Get wheels artifacts
+      - name: Get wheels artifacts # Get wheels artifacts from the build_wheels job
         uses: actions/download-artifact@v3
         with:
           name: python-wheels

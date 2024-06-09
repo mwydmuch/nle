@@ -124,7 +124,9 @@ install_requires = [
     "gymnasium==0.29.1",
 ]
 
-
+# Add patchelf to install_requires on Linux,
+# as it is needed to fix the rpath of the libnethack.so when using pre-built wheels.
+# patchelf is not available on macOS.
 if sys.platform.startswith("linux"):
     install_requires.append("patchelf>=0.17")
 
@@ -186,6 +188,7 @@ if __name__ == "__main__":
             "Programming Language :: Python :: 3.9",
             "Programming Language :: Python :: 3.10",
             "Programming Language :: Python :: 3.11",
+            "Programming Language :: Python :: 3.12",
             "Programming Language :: C",
             "Programming Language :: C++",
             "Topic :: Scientific/Engineering :: Artificial Intelligence",
