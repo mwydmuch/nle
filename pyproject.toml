@@ -50,7 +50,7 @@ build = "cp{38,39,310,311}-*"
 
 [tool.cibuildwheel.linux]
 # Only manylinux is supported (no musllinux)
-build = "cp310-manylinux*"
+build = "cp{38,39,310,311}-manylinux*"
 
 # We need to clean up the build directory, all .so files, and CMakeCache.txt
 # and install the dependencies using yum, as manylinux2014 image is CentOS 7-based
