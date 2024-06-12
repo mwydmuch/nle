@@ -13,13 +13,6 @@ from nle import _pynethack
 
 DLPATH = os.path.join(os.path.dirname(_pynethack.__file__), "libnethack.so")
 
-# site-packages/nle.libs directory is where
-# the manylinux wheel's additional .so files are installed
-# This path will be used to set the rpath of the temporary libnethack.so files
-# to allow the linker to find the additional .so files.
-# macOS wheels do not use this directory at the moment.
-PACKAGE_LIBS_DIR = os.path.join(os.path.dirname(_pynethack.__file__), "../nle.libs")
-
 DUNGEON_SHAPE = (_pynethack.nethack.ROWNO, _pynethack.nethack.COLNO - 1)
 BLSTATS_SHAPE = (_pynethack.nethack.NLE_BLSTATS_SIZE,)
 MESSAGE_SHAPE = (_pynethack.nethack.NLE_MESSAGE_SIZE,)
@@ -83,29 +76,12 @@ except AttributeError:  # No files() function in Python 3.8.
 TTYREC_VERSION = 3
 
 
-def _patch_dl_rpath(dlpath):
-    """Sets the rpath of the .so file to the package's lib directory."""
-    # The rpath of the original site-packages/nle/libnethack.so is set to relative path $ORIGIN/../nle.libs
-    # When copying the .so file to a temporary directory,
-    # the rpath needs to be updated to the new location using absolute path,
-    # otherwise the linker won't be able to find the additional .so files.
-    # This is done using the patchelf tool that is installed via pip in setup.py.
-    if os.path.exists(PACKAGE_LIBS_DIR):
-        os.system("patchelf --set-rpath '%s' %s" % (PACKAGE_LIBS_DIR, dlpath))
-
-
 def _new_dl_linux(vardir):
-    """Specialized version of _new_dl for Linux.
-    Uses memfd_create if available or O_TMPFILE instead of navie copying.
-    """
     if hasattr(os, "memfd_create"):
         target = os.memfd_create("nle.so")
-        path = "/proc/%s/fd/%i" % (os.getpid(), target)
-        # /proc/self/fd/{FD} is a symlink to the file
-        # but we need the actual path for patchelf that is invoke as a subprocess.
+        path = "/proc/self/fd/%i" % target
         try:
             shutil.copyfile(DLPATH, path)  # Should use sendfile.
-            _patch_dl_rpath(path)  # Update the rpath
         except IOError:
             os.close(target)
             raise
@@ -113,9 +89,8 @@ def _new_dl_linux(vardir):
 
     # Otherwise, no memfd_create. Try with O_TMPFILE via the tempfile module.
     dl = tempfile.TemporaryFile(suffix="libnethack.so", dir=vardir)
-    path = "/proc/%s/fd/%i" % (os.getpid(), dl.fileno())
+    path = "/proc/self/fd/%i" % dl.fileno()
     shutil.copyfile(DLPATH, path)  # Should use sendfile.
-    _patch_dl_rpath(path)  # Update the rpath
     return dl, path
 
 
