@@ -118,19 +118,6 @@ extras_deps = {
 extras_deps["all"] = [item for group in extras_deps.values() for item in group]
 
 
-install_requires = [
-    "pybind11>=2.2",
-    "numpy>=1.16",
-    "gymnasium==0.29.1",
-]
-
-# Add patchelf to install_requires on Linux,
-# as it is needed to fix the rpath of the libnethack.so when using pre-built wheels.
-# patchelf is not available on macOS.
-if sys.platform.startswith("linux"):
-    install_requires.append("patchelf>=0.17")
-
-
 if __name__ == "__main__":
     package_name = os.getenv("NLE_PACKAGE_NAME", "nle")
     cwd = os.path.dirname(os.path.abspath(__file__))
@@ -175,7 +162,7 @@ if __name__ == "__main__":
         ext_modules=[setuptools.Extension("nle", sources=[])],
         cmdclass={"build_ext": CMakeBuild},
         setup_requires=["pybind11>=2.2"],
-        install_requires=install_requires,
+        install_requires=["pybind11>=2.2", "numpy>=1.16", "gymnasium==0.29.1"],
         extras_require=extras_deps,
         python_requires=">=3.8",
         classifiers=[

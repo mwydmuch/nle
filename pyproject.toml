@@ -50,11 +50,11 @@ build = "cp{38,39,310,311}-*"
 
 [tool.cibuildwheel.linux]
 # Only manylinux is supported (no musllinux)
-build = "cp{38,39,310,311}-manylinux*"
+build = "cp310-manylinux*"
 
 # We need to clean up the build directory, all .so files, and CMakeCache.txt
 # and install the dependencies using yum, as manylinux2014 image is CentOS 7-based
-before-all = "rm -rf {project}/build {project}/*.so {project}/CMakeCache.txt && yum install -y autoconf bison cmake flex git libtool bzip2-devel"
+before-all = "rm -rf {project}/build {project}/*.so {project}/CMakeCache.txt && yum install -y autoconf bison cmake flex git libtool"
 
 # Only x86_64 and aarch64 (ARM) architectures are supported
 archs = "x86_64 aarch64"

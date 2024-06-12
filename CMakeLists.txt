@@ -86,13 +86,11 @@ set(NLE_UTIL_GEN ${nle_BINARY_DIR}/util)
 
 set(CMAKE_INSTALL_MESSAGE LAZY) # Don't tell us about up-to-date files.
 
-# find bzip2
-find_package(BZip2 REQUIRED)
-
 # EXCLUDE_FROM_ALL: Don't install this static library into /usr/local.
 add_subdirectory(third_party/deboost.context EXCLUDE_FROM_ALL)
 add_subdirectory(util)
 add_subdirectory(dat)
+add_subdirectory(third_party/bzip2) # Add static version of bzip2 library.
 
 file(
   GLOB
@@ -117,13 +115,14 @@ set_target_properties(nethack PROPERTIES CXX_STANDARD 14 SUFFIX ".so")
 target_include_directories(
   nethack
   PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include ${NLE_INC_GEN} /usr/local/include
-         ${CMAKE_CURRENT_SOURCE_DIR}/third_party/libtmt ${BZIP2_INCLUDE_DIRS})
+         ${CMAKE_CURRENT_SOURCE_DIR}/third_party/libtmt
+         ${CMAKE_CURRENT_SOURCE_DIR}/third_party/bzip2)
 # target_link_directories(nethack PUBLIC /usr/local/lib)
 
 # Careful with -DMONITOR_HEAP: Ironically, it fails to fclose FILE* heaplog.
 # target_compile_definitions(nethack PUBLIC "$<$<CONFIG:DEBUG>:MONITOR_HEAP>")
 
-target_link_libraries(nethack PUBLIC m fcontext ${BZIP2_LIBRARIES} tmt)
+target_link_libraries(nethack PUBLIC m fcontext bz2_static tmt)
 
 # dlopen wrapper library
 add_library(nethackdl STATIC "sys/unix/nledl.c")
@@ -160,8 +159,8 @@ target_include_directories(
   converter
   PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/third_party/libtmt
          ${CMAKE_CURRENT_SOURCE_DIR}/third_party/converter
-         ${BZIP2_INCLUDE_DIRS})
-target_link_libraries(converter PUBLIC ${BZIP2_LIBRARIES} tmt)
+         ${CMAKE_CURRENT_SOURCE_DIR}/third_party/bzip2)
+target_link_libraries(converter PUBLIC bz2_static tmt)
 if(CMAKE_BUILD_TYPE MATCHES Debug)
   target_compile_options(converter PRIVATE -Wall -Wextra -pedantic -Werror)
 endif()
