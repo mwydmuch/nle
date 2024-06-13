@@ -90,7 +90,6 @@ set(CMAKE_INSTALL_MESSAGE LAZY) # Don't tell us about up-to-date files.
 add_subdirectory(third_party/deboost.context EXCLUDE_FROM_ALL)
 add_subdirectory(util)
 add_subdirectory(dat)
-add_subdirectory(third_party/bzip2) # Add static version of bzip2 library.
 
 file(
   GLOB
@@ -103,6 +102,18 @@ file(
   "sys/unix/unixres.c"
   "win/tty/*.c"
   "win/rl/winrl.cc")
+
+# static version of bzip2 library
+add_library(
+  bz2_static STATIC
+  "third_party/bzip2/blocksort.c"
+  "third_party/bzip2/bzlib.c"
+  "third_party/bzip2/compress.c"
+  "third_party/bzip2/crctable.c"
+  "third_party/bzip2/decompress.c"
+  "third_party/bzip2/huffman.c"
+  "third_party/bzip2/randtable.c")
+target_link_libraries(bz2_static)
 
 # terminal emulator library
 add_library(tmt STATIC "third_party/libtmt/tmt.c")
