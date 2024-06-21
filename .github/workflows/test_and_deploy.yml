@@ -128,6 +128,7 @@ jobs:
         if: github.event_name != 'release' && github.event.action != 'released'
         uses: pypa/cibuildwheel@v2.15.0 # The main configuration is in pyproject.toml
         env:
+          CIBW_BUILD: "cp311-manylinux*" # Build only python 3.11 wheels for testing
           # Increase verbosity to see what's going on in the build in case of failure
           CIBW_BUILD_VERBOSITY: 3
           CIBW_REPAIR_WHEEL_COMMAND_LINUX: >
